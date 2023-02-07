@@ -1,3 +1,12 @@
+#Build Directories
+build*/
+
+#Subprojects
+subprojects*/
+
+#VS Code files and directories
+.vscode*/*
+
 # Prerequisites
 *.d
 
