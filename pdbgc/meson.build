@@ -24,11 +24,19 @@ phosphor_dbus_interfaces_dep = dependency(
         'phosphor_dbus_interfaces_dep'
     ],
 )
+phosphor_logging_dep = dependency(
+    'phosphor-logging',
+    fallback: [
+        'phosphor-logging',
+        'phosphor_logging_dep'
+    ],
+)
 phosphor_debug_collector_test_dep = [
     libsystemd,
     sdbusplus_dep,
     sdeventplus_dep,
-    phosphor_dbus_interfaces_dep
+    phosphor_dbus_interfaces_dep,
+    phosphor_logging_dep
 ]
 
 executable(
