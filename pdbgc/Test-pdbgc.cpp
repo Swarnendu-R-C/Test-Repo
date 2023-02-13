@@ -40,7 +40,7 @@ void logPEL(const std::string &dumpFilePath, const std::string &dumpFileType,
     {
       if (reply.is_method_error()) 
       {
-        std::cout << "Error in calling async method to create PEL" << std::endl
+        std::cerr << "Error in calling async method to create PEL" << std::endl
                   << std::endl;
       }
       else
