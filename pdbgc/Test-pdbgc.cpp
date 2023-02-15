@@ -36,6 +36,10 @@ void logPEL(const std::string &dumpFilePath, const std::string &dumpFileType,
 
     std::cout << "Calling async method for logging PEL message" << std::endl
               << std::endl;
+
+    while (dBus.process_discard())
+      ;
+    
     auto slot = busMethod.call_async([&](sdbusplus::message::message &&reply) 
     {
       if (reply.is_method_error()) 
@@ -54,6 +58,8 @@ void logPEL(const std::string &dumpFilePath, const std::string &dumpFileType,
     {
       std::cout << "Slot contains null pointer" << std::endl;
     }
+    dBus.wait(std::chrono::seconds(1));
+    dBus.process_discard();
   } 
   catch (const std::exception &e) 
   {
