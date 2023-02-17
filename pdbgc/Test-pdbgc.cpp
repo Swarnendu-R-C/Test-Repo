@@ -1,17 +1,14 @@
-#include <coroutine>
-#include <future>
 #include <iostream>
 #include <string>
 #include <variant>
 
-#include <sdbusplus/async.hpp>
-#include <sdbusplus/bus.hpp>
-
 #include <phosphor-logging/log.hpp>
 
-void logPEL(const std::string &dumpFilePath, const std::string &dumpFileType,
-            const int dumpId, const std::string &pelSev,
-            const std::string &errIntf) 
+#include "Test-pdbgc.hpp"
+
+void logPEL(const std::string& dumpFilePath, const std::string& dumpFileType,
+            const std::string& dumpId, const std::string& pelSev,
+            const std::string& errIntf) 
 {
   try 
   {
@@ -28,7 +25,7 @@ void logPEL(const std::string &dumpFilePath, const std::string &dumpFileType,
                                           loggerCreateInterface, "Create");
 
     const std::unordered_map<std::string_view, std::string_view> userDataMap = {
-        {dumpIdString, std::to_string(dumpId)},
+        {dumpIdString, dumpId},
         {dumpFileString, dumpFilePath},
         {dumpFileTypeString, dumpFileType}};
 
@@ -68,9 +65,9 @@ void logPEL(const std::string &dumpFilePath, const std::string &dumpFileType,
   }
 }
 
-auto logPEL(const std::string &dumpFilePath, const std::string &dumpFileType,
-            const int dumpId, const std::string &pelSev,
-            const std::string &errIntf, sdbusplus::async::context &ctx)
+auto logPEL(const std::string dumpFilePath, const std::string dumpFileType,
+            const std::string dumpId, const std::string pelSev,
+            const std::string errIntf, sdbusplus::async::context &ctx)
     -> sdbusplus::async::task<> 
 {
   try 
@@ -89,11 +86,14 @@ auto logPEL(const std::string &dumpFilePath, const std::string &dumpFileType,
                              .preserve();
 
     const std::unordered_map<std::string_view, std::string_view> userDataMap = {
-        {dumpIdString, std::to_string(dumpId)},
+        {dumpIdString, dumpId},
         {dumpFileString, dumpFilePath},
         {dumpFileTypeString, dumpFileType}};
 
+    
+    std::cout << "Going for writing PEL via co-routine" << std::endl << std::endl;
     co_await systemd.call<>(ctx, "Create", errIntf, pelSev, userDataMap);
+    std::cout << "Writing PEL via co-routine is done now" << std::endl << std::endl;
 
     // We are all done, so shutdown the server.
     ctx.request_stop();
@@ -117,15 +117,17 @@ int main(int argc, char **argv)
     std::cout << "No argument passed with the program " << argv[0] << std::endl
               << std::endl;
 
-  sdbusplus::async::context ctx;
-  ctx.spawn(logPEL("/var/lib/phosphor/BMC/dumps/entry/TestDump", "BMC", 9999,
-                    "xyz.openbmc_project.Logging.Entry.Level.Informational",
-                    "xyz.openbmc_project.Dump.Error.Invalidate", ctx));
-  ctx.run();
+  //sdbusplus::async::context ctx;
+  constexpr auto strDumpFilePath = "/var/lib/phosphor/BMC/dumps/entry/TestDump";
+  constexpr auto strDumpFileType = "BMC";
+  const auto     strDumpID = std::to_string(9999);
+  constexpr auto strPelSev = "xyz.openbmc_project.Logging.Entry.Level.Informational";
+  constexpr auto strErrIntf = "xyz.openbmc_project.Dump.Error.Invalidate";
 
-  /* logPEL("/var/lib/phosphor/BMC/dumps/entry/TestDump", "BMC", 9999,
-         "xyz.openbmc_project.Logging.Entry.Level.Informational",
-         "xyz.openbmc_project.Dump.Error.Invalidate"); */
+  /* ctx.spawn(logPEL(strDumpFilePath, strDumpFileType, strDumpID, strPelSev, strErrIntf, ctx));
+  ctx.run(); */
+
+  logPEL(strDumpFilePath, strDumpFileType, strDumpID, strPelSev, strErrIntf);
 
   std::cout << "================<Main Program exited>=================="
             << std::endl
